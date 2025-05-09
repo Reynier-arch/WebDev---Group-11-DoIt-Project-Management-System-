@@ -1,203 +1,145 @@
 import Pagination from "@/Components/Pagination";
 import SelectInput from "@/Components/SelectInput";
 import TextInput from "@/Components/TextInput";
-import { PROJECT_STATUS_CLASS_MAP, PROJECT_STATUS_TEXT_MAP } from "@/constants.jsx";
+import ApplicationLogo from "@/Components/ApplicationLogo";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import {
+  PROJECT_STATUS_CLASS_MAP,
+  PROJECT_STATUS_TEXT_MAP,
+} from "@/constants.jsx";
 import { Head, Link, router } from "@inertiajs/react";
-import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/16/solid'
-import TableHeading from "@/Components/TableHeading";
 
-export default function Index({auth, projects, queryParams = null}) {
-    queryParams = queryParams || {};
-    const searchFieldChanged = (name, value) => {
+export default function Index({ auth, projects, queryParams = null, success }) {
+  queryParams = queryParams || {};
+
+  const searchFieldChanged = (name, value) => {
     if (value) {
-        queryParams[name] = value 
-        } else {
-            delete queryParams[name]
-        }
-        router.get(route('project.index'), queryParams);
-    };
+      queryParams[name] = value;
+    } else {
+      delete queryParams[name];
+    }
+    router.get(route("project.index"), queryParams, {
+      preserveState: true,
+      replace: true,
+    });
+  };
 
-    const onKeyPress = (name, e) => {
-        if (e.key !== 'Enter') return;
+  const onKeyPress = (name, e) => {
+    if (e.key !== "Enter") return;
+    searchFieldChanged(name, e.target.value);
+  };
 
-        searchFieldChanged(name, e.target.value);
-    };
+  const deleteProject = (project) => {
+    if (!window.confirm("Are you sure you want to delete the project?")) return;
+    router.delete(route("project.destroy", project.id));
+  };
 
-    const sortChanged = (name) => {
-        if (name === queryParams.sort_field) {
-            if(queryParams.sort_direction === "asc") {
-                queryParams.sort_direction = "desc"
-            } else {
-                queryParams.sort_direction = "asc"
-            }
-        } else {
-            queryParams.sort_field = name;
-            queryParams.sort_direction = "asc"
-        }
-        router.get(route('project.index'), queryParams);
-    };
-
-    return (
-        <AuthenticatedLayout
-            user={auth.user}
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Projects
-                    </h2>
-                    <Link
-                    href={route("project.create")}
-                    className="bg-emerald-500 py-1 px-3 text-white rounded shadow transition-all hover:bg-emerald-600"> 
-                        Add New
-                    </Link>
-                </div>
-            }
-        >
-
-    <Head title="Projects" />
-
-        <div className="py-12">
-                    <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                        <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                            <div className="p-6 text-black-900">
-                              
-                              <div className="overflow-auto">
-                              <table className="w-full text-sm text-left rtl:text-right text-black-500 dark:text-black-400">
-                                <thead className="text-xs text-black-700 uppercase bg-black-50 dark:bg-white-700 dark:text-black-400 border-b-2 border-black-500">
-                                    <tr className="text-nowrap">
-                                        <th className="px-3 py-4"></th>
-                                        <th className="px-3 py-4"></th>
-                                        <th className="px-3 py-4">
-                                            <TextInput 
-                                                className="w-full"
-                                                defaultValue={queryParams.name}
-                                                placeholder="Project Name"
-                                                onBlur={e => searchFieldChanged('name', e.target.value)}
-                                                onKeyPress={e => onKeyPress('name', e)}
-                                            />
-                                        </th>
-                                        <th className="px-3 py-4">
-                                            <SelectInput 
-                                                className="w-full"
-                                                defaultValue={queryParams.status}
-                                                onChange={(e) =>
-                                                    searchFieldChanged('status', e.target.value)
-                                                }
-                                            >
-                                                <option value="">Select Status</option>
-                                                <option value="pending">Pending</option>
-                                                <option value="in_progress">In Progress</option>
-                                                <option value="completed">Completed</option>
-
-                                             </SelectInput>   
-                                        </th>
-                                        <th className="px-3 py-4"></th>
-                                        <th className="px-3 py-4"></th>
-                                        <th className="px-3 py-4"></th>
-                                        <th className="px-3 py-4 text-right"></th>
-                                    </tr>
-                                </thead>
-                                <thead className="text-xs text-black-700 uppercase bg-black-50 dark:bg-white-700 dark:text-black-400 border-b-2 border-black-500">
-                                    <tr className="text-nowrap">
-                                       <TableHeading 
-                                            name="id"
-                                            sort_field={queryParams.sort_field}
-                                            sort_direction={queryParams.sort_direction}
-                                            sortChanged={sortChanged}
-                                        >ID</TableHeading>
-                                        
-                                        <th 
-                                        className="px-3 py-4 cursor-pointer">
-                                        Image
-                                        </th>
-
-                                        <TableHeading 
-                                            name="name"
-                                            sort_field={queryParams.sort_field}
-                                            sort_direction={queryParams.sort_direction}
-                                            sortChanged={sortChanged}
-                                        >Name</TableHeading>
-
-                                        <TableHeading 
-                                            name="status"
-                                            sort_field={queryParams.sort_field}
-                                            sort_direction={queryParams.sort_direction}
-                                            sortChanged={sortChanged}
-                                        >Status</TableHeading>
-
-                                        <TableHeading 
-                                            name="created_at"
-                                            sort_field={queryParams.sort_field}
-                                            sort_direction={queryParams.sort_direction}
-                                            sortChanged={sortChanged}
-                                        >Created Date</TableHeading>
-
-                                        <TableHeading 
-                                            name="due_date"
-                                            sort_field={queryParams.sort_field}
-                                            sort_direction={queryParams.sort_direction}
-                                            sortChanged={sortChanged}
-                                        >Due Date</TableHeading>
-
-                                        <th 
-                                        className="px-3 py-4 cursor-pointer">
-                                            Created By
-                                        </th>
-
-                                        <th 
-                                        className="px-3 py-4 text-right cursor-pointer">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {projects.data.map((project) => (
-                                        <tr className="bg-white border-b dark:bg-black-800 dark:border-black-700" key={project.id}>
-                                        <td className="px-3 py-2">{project.id}</td>
-                                        <td className="px-3 py-2">
-                                            <img src={project.image_path} style={{width:60}} />
-                                        </td>
-                                        <th className="px-3 py-2 hover:underline text-blue-900">
-                                            <Link href={route('project.show', project.id)}>
-                                                {project.name}
-                                            </Link>
-                                            </th>
-                                        <td className="px-3 py-2">
-                                            <span className={
-                                                "px-2 py-1 rounded text-white " + PROJECT_STATUS_CLASS_MAP[project.status]
-                                                    }
-                                            >
-                                                {PROJECT_STATUS_TEXT_MAP[project.status]}
-                                            </span>
-                                        </td>
-                                        <td className="px-3 py-2">{project.created_at}</td>
-                                        <td className="px-3 py-2">{project.due_date}</td>
-                                        <td className="px-3 py-2">{project.createdBy.name}</td>
-                                        <td className="px-3 py-2">
-                                            <Link
-                                                href={route("project.edit", project.id)}
-                                                className="font-medium text-blue-600 dark:text-blue-500 hover:underline mx-1"
-                                            >
-                                                Edit
-                                            </Link>
-                                            <Link
-                                                href={route("project.destroy", project.id)}
-                                                className="font-medium text-red-600 dark:text-red-500 hover:underline mx-1"
-                                            >
-                                                Delete
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                    ))}
-                                </tbody>
-                              </table>
-                              </div>
-                                <Pagination links={projects.meta.links} />
-                            </div>
-                        </div>
-                    </div>
+  return (
+    <AuthenticatedLayout
+      user={auth.user}
+      header={
+        <div className="flex justify-between items-center">
+          <h2 className="font-semibold text-xl text-white leading-tight">Projects</h2>
+          <Link
+            href={route("project.create")}
+            className="bg-green-200 py-1 px-4 text-black rounded shadow hover:bg-green-500 hover:text-white transition"
+          >
+            Add new
+          </Link>
         </div>
-        </AuthenticatedLayout>
-    )
+      }
+    >
+      <Head title="Projects" />
+
+      <div className="py-12 bg-green-100 min-h-screen">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          {success && (
+            <div className="bg-green-500 text-white p-4 rounded mb-6">
+              {success}
+            </div>
+          )}
+
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <TextInput
+              className="w-full"
+              defaultValue={queryParams.name || ""}
+              placeholder="Search Project Name"
+              onBlur={(e) => searchFieldChanged("name", e.target.value)}
+              onKeyPress={(e) => onKeyPress("name", e)}
+            />
+            <SelectInput
+              className="w-full"
+              value={queryParams.status || ""}
+              onChange={(e) => searchFieldChanged("status", e.target.value)}
+            >
+              <option value="">Filter by Status</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </SelectInput>
+          </div>
+
+          {/* Project Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {projects.data.map((project) => (
+              <div
+                key={project.id}
+                className="bg-[#bbf7d0] shadow-lg rounded-lg overflow-hidden border border-green-100"
+              >
+                <img
+                  src={project.image_path}
+                  alt={project.name}
+                  className="w-full h-40 object-cover"
+                />
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold text-green-800 mb-1">
+                    <Link href={route("project.show", project.id)} className="hover:underline">
+                      {project.name}
+                    </Link>
+                  </h3>
+                  <p className="text-sm text-green-700 mb-2">
+                    Status:{" "}
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-white text-xs ${PROJECT_STATUS_CLASS_MAP[project.status]}`}
+                    >
+                      {PROJECT_STATUS_TEXT_MAP[project.status]}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-700 mb-1">
+                    Created: {project.created_at}
+                  </p>
+                  <p className="text-sm text-gray-700 mb-1">
+                    Due: {project.due_date}
+                  </p>
+                  <p className="text-sm text-gray-700 mb-3">
+                    By: {project.createdBy.name}
+                  </p>
+                  <div className="flex justify-between">
+                    <Link
+                      href={route("project.edit", project.id)}
+                      className="text-green-700 font-bold hover:underline text-lg:px-10"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => deleteProject(project)}
+                      className="text-red-600 font-bold hover:underline text-lg:px-10"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="mt-8">
+            <Pagination links={projects.meta.links} />
+          </div>
+        </div>
+      </div>
+    </AuthenticatedLayout>
+  );
 }
